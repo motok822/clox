@@ -23,11 +23,12 @@ struct ObjString
     Obj obj;
     int length;
     char *chars;
+    uint32_t hash;
 };
 
 ObjString *copyString(const char *chars, int length);
 ObjString *takeString(const char *chars, int length);
-ObjString *allocateString(char *chars, int length);
+ObjString *allocateString(char *chars, int length, uint32_t hash);
 void printObject(Value value);
 
 static inline bool isObjType(Value value, ObjType type)

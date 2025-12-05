@@ -45,6 +45,7 @@ typedef enum
     TOKEN_TRUE,
     TOKEN_VAR,
     TOKEN_WHILE,
+    TOKEN_CONTINUE,
     // end of file.
     TOKEN_ERROR,
     TOKEN_EOF
