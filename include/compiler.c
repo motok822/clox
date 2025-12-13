@@ -5,6 +5,7 @@
 #include "common.h"
 #include "compiler.h"
 #include "scanner.h"
+#include "memory.h"
 #include "object.h"
 #define DEBUG_PRINT_CODE
 #define UINT8_COUNT (UINT8_MAX + 1)
@@ -995,4 +996,14 @@ ObjFunction *compile(const char *source, Chunk *chunk)
     }
     ObjFunction *function = endCompiler();
     return parser.hadError ? NULL : function;
+}
+
+void markCompilerRoots()
+{
+    Compiler *compiler = current;
+    while (compiler != NULL)
+    {
+        markObject((Obj *)compiler->function);
+        compiler = compiler->enclosing;
+    }
 }

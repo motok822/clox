@@ -3,5 +3,6 @@
 #include "vm.h"
 
 ObjFunction *compile(const char *source, Chunk *chunk);
+void markCompilerRoots();
 
 #endif
