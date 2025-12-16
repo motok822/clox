@@ -125,6 +125,12 @@ void printObject(Value value)
         printFunction(AS_BOUND_METHOD(value)->method->function);
         break;
     }
+    case OBJ_ARRAY:
+    {
+        ObjArray *array = AS_ARRAY(value);
+        printf("<array[%d]>", array->elementCount);
+        break;
+    }
     }
 }
 
@@ -191,4 +197,16 @@ ObjBoundMethod *newBoundMethod(Value receiver, ObjClosure *method)
     bound->receiver = receiver;
     bound->method = method;
     return bound;
+}
+
+ObjArray *newArray(uint8_t elementCount)
+{
+    size_t size = sizeof(ObjArray) + sizeof(Value) * elementCount;
+    ObjArray *array = (ObjArray *)allocateObject(size, OBJ_ARRAY);
+    array->elementCount = elementCount;
+    for (int i = 0; i < elementCount; i++)
+    {
+        array->elements[i] = NIL_VAL;
+    }
+    return array;
 }

@@ -42,6 +42,13 @@ typedef enum
     OP_INHERIT,
     OP_GET_SUPER,
     OP_SUPER_INVOKE,
+    OP_ARRAY,
+    OP_ARRAY_GET_GLOBAL,
+    OP_ARRAY_SET_GLOBAL,
+    OP_ARRAY_GET_LOCAL,
+    OP_ARRAY_SET_LOCAL,
+    OP_ARRAY_GET_UPVALUE,
+    OP_ARRAY_SET_UPVALUE,
 } OpCode;
 
 typedef struct

@@ -9,7 +9,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
-// #define DEBUG_TRACE_EXECUTION
+#define DEBUG_TRACE_EXECUTION
 
 VM vm;
 
@@ -419,6 +419,30 @@ static InterpretResult run()
             push(value);
             break;
         }
+        case OP_ARRAY_GET_GLOBAL:
+        {
+            ObjString *name = READ_STRING();
+            Value temp;
+            if (!tableGet(&vm.globals, name, &temp))
+            {
+                runtimeError("Runtime error: Undefined variable '%s'.", name->chars);
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            if (!IS_ARRAY(temp))
+            {
+                runtimeError("Runtime error: Variable '%s' is not an array.", name->chars);
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            ObjArray *array = AS_ARRAY(temp);
+            uint8_t index = (uint8_t)AS_NUMBER(pop());
+            if (index >= array->elementCount)
+            {
+                runtimeError("Runtime error: Array index out of bounds.");
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            push(array->elements[index]);
+            break;
+        }
         case OP_SET_GLOBAL:
         {
             ObjString *name = READ_STRING();
@@ -430,16 +454,69 @@ static InterpretResult run()
             }
             break;
         }
+        case OP_ARRAY_SET_GLOBAL:
+        {
+            ObjString *name = READ_STRING();
+            Value value = pop();
+            Value temp;
+            if (!tableGet(&vm.globals, name, &temp))
+            {
+                runtimeError("Runtime error: Undefined variable '%s'.", name->chars);
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            if (!IS_ARRAY(temp))
+            {
+                runtimeError("Runtime error: Variable '%s' is not an array.", name->chars);
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            ObjArray *array = AS_ARRAY(temp);
+            uint8_t index = (uint8_t)AS_NUMBER(pop());
+            if (index >= array->elementCount)
+            {
+                runtimeError("Runtime error: Array index out of bounds.");
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            array->elements[index] = value;
+            break;
+        }
         case OP_SET_LOCAL:
         {
             uint8_t slot = READ_BYTE();
             frame->slots[slot] = peek(0);
             break;
         }
+        case OP_ARRAY_SET_LOCAL:
+        {
+            uint8_t slot = READ_BYTE();
+            ObjArray *array = AS_ARRAY(frame->slots[slot]);
+            Value value = pop();
+            uint8_t index = (uint8_t)AS_NUMBER(pop());
+            if (index >= array->elementCount)
+            {
+                runtimeError("Runtime error: Array index out of bounds.");
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            push(value);
+            array->elements[index] = value;
+            break;
+        }
         case OP_GET_LOCAL:
         {
             uint8_t slot = READ_BYTE();
             push(frame->slots[slot]);
+            break;
+        }
+        case OP_ARRAY_GET_LOCAL:
+        {
+            uint8_t slot = READ_BYTE();
+            ObjArray *array = AS_ARRAY(frame->slots[slot]);
+            uint8_t index = (uint8_t)AS_NUMBER(pop());
+            if (index >= array->elementCount)
+            {
+                runtimeError("Runtime error: Array index out of bounds.");
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            push(array->elements[index]);
             break;
         }
         case OP_JUMP_IF_FALSE:
@@ -477,10 +554,37 @@ static InterpretResult run()
             push(*frame->closure->upvalues[slot]->location);
             break;
         }
+        case OP_ARRAY_GET_UPVALUE:
+        {
+            uint8_t slot = READ_BYTE();
+            ObjArray *array = AS_ARRAY(*frame->closure->upvalues[slot]->location);
+            uint8_t index = (uint8_t)AS_NUMBER(pop());
+            if (index >= array->elementCount)
+            {
+                runtimeError("Runtime error: Array index out of bounds.");
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            push(array->elements[index]);
+            break;
+        }
         case OP_SET_UPVALUE:
         {
             uint8_t slot = READ_BYTE();
             *frame->closure->upvalues[slot]->location = peek(0);
+            break;
+        }
+        case OP_ARRAY_SET_UPVALUE:
+        {
+            uint8_t slot = READ_BYTE();
+            ObjArray *array = AS_ARRAY(*frame->closure->upvalues[slot]->location);
+            uint8_t index = (uint8_t)AS_NUMBER(pop());
+            Value value = pop();
+            if (index >= array->elementCount)
+            {
+                runtimeError("Runtime error: Array index out of bounds.");
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            array->elements[index] = value;
             break;
         }
         case OP_CLOSURE:
@@ -600,6 +704,14 @@ static InterpretResult run()
                 return INTERPRET_RUNTIME_ERROR;
             }
             frame = &vm.frames[vm.frameCount - 1];
+            break;
+        }
+        case OP_ARRAY:
+        {
+            uint8_t elementCount = (uint8_t)AS_NUMBER(pop());
+            ObjArray *array = newArray(elementCount);
+            push(OBJ_VAL((Obj *)array));
+            int pos = frame->ip - frame->closure->function->chunk.code;
             break;
         }
         }

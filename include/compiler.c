@@ -488,6 +488,30 @@ static void namedVariable(Token name, bool canAssign)
         setOp = OP_SET_GLOBAL;
     }
 
+    if (match(TOKEN_LEFT_BRACKET))
+    {
+        expression(false);
+        consume(TOKEN_RIGHT_BRACKET, "Expect ']' after array index.");
+        switch (getOp)
+        {
+        case OP_GET_GLOBAL:
+            getOp = OP_ARRAY_GET_GLOBAL;
+            setOp = OP_ARRAY_SET_GLOBAL;
+            break;
+        case OP_GET_LOCAL:
+            getOp = OP_ARRAY_GET_LOCAL;
+            setOp = OP_ARRAY_SET_LOCAL;
+            break;
+        case OP_GET_UPVALUE:
+            getOp = OP_ARRAY_GET_UPVALUE;
+            setOp = OP_ARRAY_SET_UPVALUE;
+            break;
+        default:
+            error("Invalid array access.");
+            return;
+        }
+    }
+
     if (canAssign && match(TOKEN_EQUAL))
     {
         expression(canAssign);
@@ -785,12 +809,21 @@ static void call(bool canAssign)
 static void varDeclaration(bool canAssign)
 {
     uint8_t global = parseVariable("Expect variable name.");
+    bool isArray = false;
+
+    if (match(TOKEN_LEFT_BRACKET))
+    {
+        expression(false);
+        consume(TOKEN_RIGHT_BRACKET, "Expect ']' after array size.");
+        emitByte(OP_ARRAY);
+        isArray = true;
+    }
 
     if (match(TOKEN_EQUAL))
     {
         expression(canAssign);
     }
-    else
+    else if (!isArray)
     {
         emitByte(OP_NIL);
     }

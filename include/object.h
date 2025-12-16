@@ -20,6 +20,8 @@
 #define AS_INSTANCE(value) ((ObjInstance *)AS_OBJ(value))
 #define IS_BOUND_METHOD(value) isObjType(value, OBJ_BOUND_METHOD)
 #define AS_BOUND_METHOD(value) ((ObjBoundMethod *)AS_OBJ(value))
+#define IS_ARRAY(value) isObjType(value, OBJ_ARRAY)
+#define AS_ARRAY(value) ((ObjArray *)AS_OBJ(value))
 
 typedef enum
 {
@@ -31,6 +33,7 @@ typedef enum
     OBJ_INSTANCE,
     OBJ_UPVALUE,
     OBJ_BOUND_METHOD,
+    OBJ_ARRAY,
 } ObjType;
 
 struct Obj
@@ -101,11 +104,19 @@ typedef struct
     ObjClosure *method;
 } ObjBoundMethod;
 
+typedef struct
+{
+    Obj obj;
+    uint8_t elementCount;
+    Value elements[];
+} ObjArray;
+
 ObjString *
 copyString(const char *chars, int length);
 ObjString *takeString(const char *chars, int length);
 ObjString *allocateString(char *chars, int length, uint32_t hash);
 void printObject(Value value);
+ObjArray *newArray(uint8_t elementCount);
 
 ObjFunction *newFunction();
 ObjFunction *createFunction();

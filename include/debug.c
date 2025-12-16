@@ -31,7 +31,15 @@ static int byteInstruction(const char *name, Chunk *chunk, int offset)
     return offset + 2;
 }
 
-static int jumpInstruction(const char *name, int sign, Chunk *chunk, int offset)
+static int arrayInstruction(const char *name, Chunk *chunk, int offset)
+{
+    uint8_t slot = chunk->code[offset + 1];
+    printf("%-16s %4d\n", name, slot);
+    return offset + 3;
+}
+
+static int
+jumpInstruction(const char *name, int sign, Chunk *chunk, int offset)
 {
     uint16_t jump = (uint16_t)(chunk->code[offset + 1] << 8);
     jump |= chunk->code[offset + 2];
@@ -130,6 +138,20 @@ int disassembleInstruction(Chunk *chunk, int offset)
         return constantInstruction("OP_GET_SUPER", chunk, offset);
     case OP_SUPER_INVOKE:
         return invokeInstruction("OP_SUPER_INVOKE", chunk, offset);
+    case OP_ARRAY:
+        return simpleInstruction("OP_ARRAY", offset);
+    case OP_ARRAY_GET_GLOBAL:
+        return arrayInstruction("OP_ARRAY_GET_GLOBAL", chunk, offset);
+    case OP_ARRAY_SET_GLOBAL:
+        return arrayInstruction("OP_ARRAY_SET_GLOBAL", chunk, offset);
+    case OP_ARRAY_GET_LOCAL:
+        return arrayInstruction("OP_ARRAY_GET_LOCAL", chunk, offset);
+    case OP_ARRAY_SET_LOCAL:
+        return arrayInstruction("OP_ARRAY_SET_LOCAL", chunk, offset);
+    case OP_ARRAY_GET_UPVALUE:
+        return arrayInstruction("OP_ARRAY_GET_UPVALUE", chunk, offset);
+    case OP_ARRAY_SET_UPVALUE:
+        return arrayInstruction("OP_ARRAY_SET_UPVALUE", chunk, offset);
     case OP_CLOSURE:
     {
         offset++;
