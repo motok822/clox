@@ -6,8 +6,9 @@
 #include <stdint.h>
 
 #define UINT8_COUNT 256
-#define DEBUG_STRESS_GC
+// #define DEBUG_STRESS_GC
 #define DEBUG_LOG_GC
+// #define NAN_BOXING
 // #define DEBUG_TRACE_EXECUTION
 
 #endif

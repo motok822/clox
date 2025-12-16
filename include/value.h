@@ -6,6 +6,20 @@ typedef struct Obj Obj;
 typedef struct ObjString ObjString;
 typedef struct ObjFunction ObjFunction;
 typedef struct ObjNative ObjNative;
+#ifdef NAN_BOXING
+
+typedef uint64_t Value;
+
+#define NUMBER_VAL(num) numToValue(num)
+
+static inline Value numToValue(double num)
+{
+    Value value;
+    memcpy(&value, &num, sizeof(double));
+    return value;
+}
+
+#else
 
 typedef enum
 {
@@ -25,6 +39,8 @@ typedef struct
         Obj *obj;
     } as;
 } Value;
+
+#endif
 
 typedef struct
 {
